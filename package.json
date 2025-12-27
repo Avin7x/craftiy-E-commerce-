@@ -24,6 +24,7 @@
     "stripe": "^20.0.0"
   },
   "dependencies": {
+    "cors": "^2.8.5",
     "express-fileupload": "^1.5.2"
   }
 }

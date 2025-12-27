@@ -3,9 +3,10 @@ import { UserPlus, Mail, Lock, User, ArrowRight, Loader } from "lucide-react";
 import { motion } from "framer-motion";
 import { useState } from "react";
 import FormElement from "../components/FormElement";
+import useUserStore from "../stores/useUserStore.js";
 
 const SignUpPage = () => {
-  const loading = false;
+  const { signup, loading } = useUserStore();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -15,6 +16,7 @@ const SignUpPage = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     console.log(formData);
+    signup(formData);
   };
 
   const childElements = [
@@ -23,7 +25,6 @@ const SignUpPage = () => {
       name: "name",
       type: "text",
       icon: User,
-      field: "name",
       placeholder: "John Doe",
     },
     {
@@ -96,6 +97,12 @@ const SignUpPage = () => {
                 
               </button>
           </form>
+
+          <p className="mt-8 text-center text-sm text-gray-400">
+            Already have an account? {" "}
+            <Link to={"/login"} className="font-medium text-emerald-400 hover:text-emerald-300">
+            Login here <ArrowRight className="inline w-4 h-4"/></Link>
+          </p>
         </div>
       </motion.div>
     </div>

@@ -1,11 +1,19 @@
-import { ShoppingCart, UserPlus, LogIn, LogOut, Lock } from "lucide-react";
-import { Link } from "react-router-dom";
+import { ShoppingCart, UserPlus, LogIn, LogOut, Lock, Loader } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import useUserStore from "../stores/useUserStore";
 
 
 const Navbar = () => {
 
-  const user = false;
-	const isAdmin = false;
+  const { user, logout} = useUserStore();
+  const isAdmin = user?.role === "admin";
+
+  const navigate = useNavigate();
+
+  const handleLogout = async() => {
+	await logout();
+	navigate("/login");
+  }
 	
 
 	return (
@@ -57,6 +65,7 @@ const Navbar = () => {
 							<button
 								className='bg-gray-700 hover:bg-gray-600 text-white py-2 px-4 
 						rounded-md flex items-center transition duration-300 ease-in-out'
+							onClick={handleLogout}
 								
 							>
 								<LogOut size={18} />
