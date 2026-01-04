@@ -118,7 +118,7 @@ const  uploadOnCloudinary = async  (file) =>  {
 }
 
 export const createProduct = async (req, res) => {
-    const imageFile = req.files?.file || null;
+    let imageFile = req.files?.image || null;
     try {
 
         const { name, description, price, category} = req.body;
@@ -159,7 +159,7 @@ export const deleteProduct = async (req, res) => {
         }
         if(product.image){
             try {
-                const publicId = product.image.split("/").pop().split(".")[0];
+                const publicId = product.image.split("/upload/")[1].split("/").slice(1).join("/").split(".")[0];
                 await cloudinary.uploader.destroy(`products/${publicId}`);
                 console.log("Deleted image from cloudinary");
             } catch (error) {

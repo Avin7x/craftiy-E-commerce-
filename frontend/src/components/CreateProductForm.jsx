@@ -1,9 +1,11 @@
 import  { useState } from 'react';
 import { motion } from "framer-motion";
-import { PlusCircle, Upload } from 'lucide-react';
+import { Loader, PlusCircle, Upload } from 'lucide-react';
+import useProductStore from '../stores/useProductStore.js';
+import toast from 'react-hot-toast';
 
 const CreateProductForm = () => {
-    const loading = false;
+    const {loading, createProduct} = useProductStore();
     const categories = ["jeans", "t-shirts", "shoes", "glasses", "jackets", "suits", "bags"];
 
     const [newProduct, setNewProduct] = useState({
@@ -25,17 +27,22 @@ const CreateProductForm = () => {
         e.preventDefault();
 
         if(!newProduct.image){
-            alert("Please uplopad an image");
+            toast.error("Please upload an image");
+
             return;
         }
 
-        const formDate = new FormData();
+		await createProduct(newProduct);
+		setNewProduct({
+			name: "",
+			description: "",
+			price: "",
+			category: "",
+			image: null,
+		});
 
-        FormData.append("name", newProduct.name);
-        FormData.append("description", newProduct.description);
-        FormData.append("price", newProduct.price);
-        FormData.append("category", newProduct.category);
-        FormData.append("image", newProduct.image);
+
+        
     }
         
   return (
