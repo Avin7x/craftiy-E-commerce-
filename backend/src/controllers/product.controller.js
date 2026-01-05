@@ -89,7 +89,7 @@ export const toggleFeaturedProduct = async (req,res) => {
             return res.status(404).json({message:"product not found"});
         }
         product.isFeatured = !(product.isFeatured);
-        await product.save();
+        const updatedProduct = await product.save();
         //update the redis cache for featured  products
         await updateFeaturedProductsCache();
 
@@ -97,6 +97,7 @@ export const toggleFeaturedProduct = async (req,res) => {
         message: `Product ${
             product.isFeatured ? "marked as featured" : "removed from featured"
             } successfully`,
+        updatedProduct
         });
     } catch (error) {
         console.error("Error in toggleFeaturedProduct controller", error);
