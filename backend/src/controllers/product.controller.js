@@ -63,7 +63,7 @@ export const getRecommendedProducts = async  (req, res)=>{
 export const getProductsBycategory = async(req, res)=>{
     try {
         const product = await Product.find({category: req.params.category});
-        if(!product){
+        if(product.length === 0){
             return res.status(404).json({message: "Product not  found"});
         }
 
