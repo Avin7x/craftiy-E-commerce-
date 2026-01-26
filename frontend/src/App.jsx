@@ -9,13 +9,23 @@ import { useEffect } from 'react'
 import LoaderComp from './components/LoaderComp'
 import AdminPage from './pages/AdminPage'
 import CategoryPage from './pages/CategoryPage.jsx'
+import useCartStore from './stores/useCartStore.js'
+import CartPage from './pages/cartPage.jsx'
+
 
 function App() {
     const {user, checkAuth, checkingAuth} = useUserStore();
+     const {cart, getCartProducts} = useCartStore();
 
     useEffect(()=> {
         checkAuth();
+        
     }, [checkAuth]);
+
+    useEffect(() => {
+        if(!user) return;
+	getCartProducts();
+  }, [getCartProducts, user]);
 
     if(checkingAuth) {
         return <LoaderComp/>
@@ -39,6 +49,7 @@ function App() {
                 <Route path='/login'  element={!user ? <LoginPage /> : <Navigate to="/" />}></Route>
                 <Route path='/secret-dashboard'  element={user?.role === "admin" ? <AdminPage /> : <Navigate to="/login" />}></Route>
                 <Route path='/category/:category' element={<CategoryPage />} />
+                <Route path='/cart' element={user? <CartPage /> : <Navigate to="/login"/>} />
             </Routes>
         </div>
         <Toaster/>

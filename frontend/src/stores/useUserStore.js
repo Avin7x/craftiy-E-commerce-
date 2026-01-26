@@ -88,7 +88,7 @@ const useUserStore = create((set) => ({
         user: res.data,
         checkingAuth: false,
       });
-      console.log(res.data.user);
+      //console.log(res.data.user);
     } catch {
       set({
         user: null,

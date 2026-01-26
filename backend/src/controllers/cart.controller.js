@@ -91,7 +91,8 @@ export const updateQuantity = async (req, res)=>{
 export const getCartProducts = async(req, res) => {
   try {
     if(req.user.cartItems.length === 0){
-      return res.status(200).json({message: "Cart is empty!"});
+      //cart is empty
+      return res.status(200).json([]);
     }
     //get all the product ids
     const productIds = req.user.cartItems.map(item => item.product);
@@ -100,7 +101,7 @@ export const getCartProducts = async(req, res) => {
     const products  = await Product.find({_id: {$in: productIds }}).lean();
 
     //store all the products in map for constant o(1) lookup
-    const productMap = new map();
+    const productMap = new Map();
     products.forEach(p => {
       productMap.set(p._id.toString(), p);
     });
