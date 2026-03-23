@@ -4,22 +4,17 @@ import toast from "react-hot-toast";
 const useCartStore = create((set, get) => ({
     cart: [],
     isLoading: false,
-    total:0,
-    subtotat:0,
-    coupon:null,
+    total:0, //price of products b4 any charges
+    subtotal:0, //total amount after applying copuns or any discount
+    coupon:null, 
+    isCouponApplied: false,
 
     addToCart: async(product) => {
         set({isLoading: true});
         try {
-            await axios.post("/cart", {productId: product._id});
+            const response = await axios.post("/cart", {productId: product._id});
+            set({isLoading: false, cart: response.data});
             toast.success("Product added to cart successfully");
-            set((prevstate) => {
-                const existingItem = prevstate.cart?.find((item) => item._id === product._id);
-
-                const newCart= existingItem? prevstate.cart.map((item) => (item._id === product._id ? {...item, quantity: item.quantity+1}: item))
-                : [...prevstate.cart, {...product, quantity: 1}];
-                return {cart: newCart, isLoading: false};
-            });
             get().calculateTotals();
             
         } catch (error) {
@@ -29,7 +24,7 @@ const useCartStore = create((set, get) => ({
     },
 
     getCartProducts: async() => {
-         set({cart: [], loading: true});
+         set({ isLoading: true});
          try {
             const response = await axios.get("/cart");
             set({
@@ -38,14 +33,49 @@ const useCartStore = create((set, get) => ({
             });
             get().calculateTotals();
          } catch (error) {
-            set({cart: [], loading: false});
+            set({cart: [], isLoading: false});
             toast.error(error.response.data.message || "oops something went wrong, please try again");
          }
+    },
+    removeFromCart: async (productId) => {
+         console.log("DELETE request productId:", productId);
+        set({isLoading: true});
+        try {
+            const response = await axios.delete(`/cart`, { data: { productId } });
+            set({isLoading:false, cart: response.data});
+            get().calculateTotals();
+            toast.success( "Product removed from cart successfully");
+            
+            
+        } catch (error) {
+             set({isLoading:false});
+             toast.error(error.response.data.message || "oops something went wrong");
+        }
+    },
+    updateQuantity: async(product, quantity) => {
+        console.log(quantity);
+        console.log(product);
+        if(quantity === 0){
+            await get().removeFromCart(product);
+            return;
+        }
+        set({isLoading:true});
+        try {
+            //note: data wrapper is only meeded for delete method
+            const response = await axios.put(`/cart/${product}`, {quantity});
+           set({isLoading: false, cart: response.data})
+            get().calculateTotals();
+
+        } catch (error) {
+            toast.error(error.response?.data?.message || "oops something went wrong!");
+        } finally {
+            set({isLoading:false});
+        }
     },
 
     calculateTotals: ()=> {
         const {cart, coupon} = get();
-        const subtotal = cart?.reduce((sum, item) => sum + item.price * item.quantity, 0);
+        const subtotal = cart?.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
         let total = subtotal;
 
         if(coupon) {

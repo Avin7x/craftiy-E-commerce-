@@ -24,7 +24,7 @@ function App() {
 
     useEffect(() => {
         if(!user) return;
-	getCartProducts();
+	    getCartProducts();
   }, [getCartProducts, user]);
 
     if(checkingAuth) {
