@@ -8,22 +8,26 @@ export const createCheckoutSession = async(req, res) => {
         if(!Array.isArray(products)|| products.length === 0) {
             return res.status(400).json({message: "Invalid or empty products array"});
         }
+        // console.log(products);
 
         let totalAmount = 0;
-        let lineItems = products.map((product) => {
+        let lineItems = products.map((item) => {
+            const product = item.product;
+            const qty = Number(item.quantity);
+
             let amount = Math.round(product.price * 100)//stripe requires amount in cents and 1$ -> 100cents
-            totalAmount += amount*product.quantity
+            totalAmount += amount*qty;
 
             return {
                 price_data: {
                     currency: "usd",
                     product_data: {
                         name: product.name,
-                        images: [product.image]
+                        images: product.image? [product.image] : []
                     },
                     unit_amount: amount
                 },
-                quantity:product.quantity
+                quantity: qty|| 1
             }
         });
 
@@ -34,7 +38,7 @@ export const createCheckoutSession = async(req, res) => {
         }
 
         const session = await stripe.checkout.sessions.create({
-            payment_method_types: ["card",],
+            mode: "payment",
             line_items: lineItems,
             success_url: `${process.env.CLIENT_URL}/purchase-success?session_id={CHECKOUT_SESSION_ID}`,
             cancel_url: `${process.env.CLIENT_URL}/purchase-cancel`,
@@ -46,7 +50,7 @@ export const createCheckoutSession = async(req, res) => {
                 ]
               : [],
             metadata: {
-                userId: req.user.id.toString(),
+                userId: req.user._id.toString(),
                 couponCode: couponCode || "",
                 products: JSON.stringify(products.map(p=>({
                     id: p._id,
@@ -57,24 +61,26 @@ export const createCheckoutSession = async(req, res) => {
 
         });
 
+        console.log(session.total_details);
+
         //create a coupon for the user for next purchase if total amount in cents exceeds 20000 i.e, $200
         if(totalAmount >= 20000){
             await createNewcoupon(req.user._id);
         }
 
 
-     const fullSession = await stripe.checkout.sessions.retrieve(session.id);
+        //  const fullSession = await stripe.checkout.sessions.retrieve(session.id);
 
         return res.status(200).json({
-            id: session.id,
-            totalAmount: fullSession.amount_total / 100,
+           url: session.url,
+            totalAmount: session.amount_total / 100,
         });
 
         
 
     } catch (error) {
         console.error("Error in createCheckoutSession controller", error);
-        return res.status(500).json({message:"server error", error: "Internal server error"});
+        return res.status(500).json({message:"server error", error: error.message});
     }
 }
 
