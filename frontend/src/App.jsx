@@ -11,6 +11,7 @@ import AdminPage from './pages/AdminPage'
 import CategoryPage from './pages/CategoryPage.jsx'
 import useCartStore from './stores/useCartStore.js'
 import CartPage from './pages/cartPage.jsx'
+import PurchaseSuccessPage from './pages/PurchaseSuccessPage.jsx'
 
 
 function App() {

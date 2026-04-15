@@ -72,7 +72,8 @@ export const createCheckoutSession = async(req, res) => {
         //  const fullSession = await stripe.checkout.sessions.retrieve(session.id);
 
         return res.status(200).json({
-           url: session.url,
+            id: session.id,
+            url: session.url,
             totalAmount: session.amount_total / 100,
         });
 
