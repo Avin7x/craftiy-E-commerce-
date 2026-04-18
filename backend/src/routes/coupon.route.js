@@ -4,5 +4,5 @@ import { getCoupon, validateCoupon } from "../controllers/coupon.controller.js";
 
 const router = Router();
 router.get("/", isAuth, getCoupon);
-router.get("/validate", isAuth, validateCoupon);
+router.post("/validate", isAuth, validateCoupon);
 export default router;

@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import { stripe } from "../lib/stripe.js";
 import Coupon from "../models/coupon.model.js";
 import Order from "../models/order.model.js";
@@ -8,7 +9,7 @@ export const createCheckoutSession = async(req, res) => {
         if(!Array.isArray(products)|| products.length === 0) {
             return res.status(400).json({message: "Invalid or empty products array"});
         }
-        // console.log(products);
+        console.log(products);
 
         let totalAmount = 0;
         let lineItems = products.map((item) => {
@@ -52,11 +53,15 @@ export const createCheckoutSession = async(req, res) => {
             metadata: {
                 userId: req.user._id.toString(),
                 couponCode: couponCode || "",
-                products: JSON.stringify(products.map(p=>({
-                    id: p._id,
-                    quantity: p.quantity,
-                    price: p.price,
-                })))
+                products: JSON.stringify(products.map(item=>{
+                    const p = item.product;
+                    
+                    return {
+                        id: p._id,
+                        quantity: item.quantity,
+                        price: p.price,
+                    }
+                }))
             }
 
         });
@@ -118,44 +123,56 @@ export const checkoutSucess = async(req, res) => {
     try {
         const {sessionId }=req.body;
         if(!sessionId){
-            return res.status(400).json({ message: "Missing Stripe session ID in request body" });
+            return res.status(404).json({ message: "Missing Stripe session ID in request body" });
         }
 
         const session = await stripe.checkout.sessions.retrieve(sessionId);
-        //check if payment was completed
-        if(session.payment_status === "paid"){
-            //update coupon
-            if(session.metadata.coupon){
-                await Coupon.findOneAndUpdate(
-                    {
-                        code: session.metadata.couponCode,
-                        userId: mongoose.Types.ObjectId(session.metadata.userId)
-                    },
-                    {
-                        isActive: false,
-                        usedAt:  new Date(session.created * 1000) // Stripe session creation time
-                    }
-                )
-            }
 
-            //create a new order
-            const products = JSON.parse(session.metadata.products);
-            const newOrder = new Order({
-                userId: session.metadata.userId,
-                products: products.map(p => ({
-                    product: p.id,
-                    quantity: p.quantity,
-                    price: p.price
-                })),
-                totalAmount: session.amount_total/100,
-                stripeSessionId: sessionId
+        if(session.payment_status !== 'paid'){
+            return res.status(400).json({
+                message: "payment unsuccessful"
             });
-
-           await newOrder.save();
-           return res.status(200).json({sucess: true, message: "Payment successfull, order placed", orderId: newOrder._id});
         }
 
-        return res.status(400).json({message: "Payment uncessfull"});
+        //prevent duplicate order
+        const orderExists = await Order.findOne({stripeSessionId: sessionId});
+        if(orderExists) {
+            return res.status(200).json({
+                message: "Order already processed",
+                orderId: orderExists._id
+            });
+        }
+       
+        //update coupon
+        if(session.metadata.couponCode){
+            await Coupon.findOneAndUpdate(
+                {
+                     code: session.metadata.couponCode,
+                    userId: new mongoose.Types.ObjectId(session.metadata.userId)
+                },
+                {
+                    isActive: false,
+                    usedAt:  new Date(session.created * 1000) // Stripesession creation time
+                }
+            )
+        }
+
+        //create a new order
+        const products = JSON.parse(session.metadata.products);
+        const newOrder = new Order({
+            userId: session.metadata.userId,
+            products: products.map(p => ({
+                product: p.id,
+                quantity: p.quantity,
+                price: p.price
+            })),
+            totalAmount: session.amount_total/100,
+            stripeSessionId: sessionId
+        });
+
+        await newOrder.save();
+        return res.status(200).json({sucess: true, message: "Payment successfull, order placed", orderId: newOrder._id});
+        
     } catch (error) {
         console.error("Error in checkoutSuccess controller",error);
         return res.status(500).json({message: "Error processing sucessfull checkout"});

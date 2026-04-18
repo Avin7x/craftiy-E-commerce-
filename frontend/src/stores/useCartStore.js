@@ -4,8 +4,8 @@ import toast from "react-hot-toast";
 const useCartStore = create((set, get) => ({
     cart: [],
     isLoading: false,
-    total:0, //price of products b4 any charges
-    subtotal:0, //total amount after applying copuns or any discount
+    total:0, //total amount after applying copuns or any discount
+    subtotal:0, //price of products b4 applying any discounts or charges
     coupon:null, 
     isCouponApplied: false,
 
@@ -36,6 +36,19 @@ const useCartStore = create((set, get) => ({
             set({cart: [], isLoading: false});
             toast.error(error.response.data.message || "oops something went wrong, please try again");
          }
+    },
+    clearCart: async (productId) => {
+        set({isLoading: true});
+        try {
+            const response = await axios.delete('/cart', { data: { productId } });
+            set({cart: response.data, coupon: null, total: 0, subtotal: 0});
+            
+        } catch (error) {
+            toast.error(error.response?.data?.message);
+        }
+        finally {
+            set({isLoading: false});
+        }
     },
     removeFromCart: async (productId) => {
          console.log("DELETE request productId:", productId);
@@ -71,6 +84,38 @@ const useCartStore = create((set, get) => ({
         } finally {
             set({isLoading:false});
         }
+    },
+
+    getMyCoupon: async () => {
+        set({isLoading: true});
+        try {
+            const res = await axios.get('/coupons');
+            set({coupon: res.data});
+        } catch (error) {
+             toast.error(error.response?.data?.message || "Error in fetching coupons");
+        } finally {
+            set({isLoading: false});
+        }
+    },
+
+    applyCoupon: async (code) => {
+        set({isLoading: true});
+        try {
+            const res = await axios.post('/coupons/validate', { code });
+            set({isCouponApplied: true});
+            get().calculateTotals();
+            toast.success("coupon applied successfully");
+        } catch (error) {
+            toast.error(error.response?.data?.message);
+        }
+        finally{
+            set({isLoading: false});
+        }
+    },
+    removeCoupon: () => {
+        set({coupon: null, isCouponApplied: false});
+        get().calculateTotals();
+        toast.success("coupon removed");
     },
 
     calculateTotals: ()=> {
