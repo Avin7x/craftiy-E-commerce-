@@ -29,6 +29,18 @@ const useproductStore = create((set, get) => ({
             toast.error(error.response.data.message || "Failed to fetch products")
         }
     },
+    fetchFeaturedProducts: async() => {
+        set({loading: true});
+        try {
+            
+            const res = await axios.get("/products/featured");
+            console.log(res.data.featuredProducts);
+            set({products: res.data.featuredProducts, loading:false});
+        } catch (error) {
+            set({loading: false});
+            toast.error(error.response?.data?.message || "Failed to fetch featured products");
+        }
+    },
     createProduct: async(product)=>{
         set({loading:true});
         try {

@@ -2,7 +2,8 @@ import { create } from "zustand";
 import axios from "../lib/axios.js";
 import { toast } from "react-hot-toast";
 
-const useUserStore = create((set) => ({
+
+const useUserStore = create((set, get) => ({
   user: null,
   loading: false,
   checkingAuth: true,
@@ -96,6 +97,61 @@ const useUserStore = create((set) => ({
       });
     }
   },
+
+  refreshToken: async () => {
+      console.log("Refresh started");
+
+     const res = await axios.post("/auth/refresh-token");
+     console.log("Refresh success");
+      return res.data;
+   
+  }
 }));
+
+// axious interceptor for token refresh 
+let refreshPromise = null;
+
+axios.interceptors.response.use(
+  (response) => response,
+
+  async (error) => {
+    const originalRequest = error.config;
+
+    //prevents infinite loop if refresh-token returns 401
+    if (originalRequest.url?.includes("/auth/refresh-token")) {
+      return Promise.reject(error);
+    }
+
+    if (
+      error.response?.status === 401 &&
+      !originalRequest?._retry
+    ) {
+      originalRequest._retry = true;
+
+      try {
+        // Start refresh only once
+        if (!refreshPromise) {
+          refreshPromise = useUserStore
+            .getState()
+            .refreshToken()
+            .finally(() => {
+              refreshPromise = null;
+            });
+        }
+
+        // Wait for ongoing refresh
+        await refreshPromise;
+
+        // Retry original request
+        return axios(originalRequest);
+      } catch (refreshError) {
+          useUserStore.setState({ user: null });
+          return Promise.reject(refreshError);
+      }
+    }
+
+    return Promise.reject(error);
+  }
+);
 
 export default useUserStore;

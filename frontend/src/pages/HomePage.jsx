@@ -1,5 +1,8 @@
 import { motion } from "framer-motion"
 import CategoryItem from "../components/CategoryItem"
+import useproductStore from "../stores/useProductStore"
+import { useEffect } from "react"
+import FeaturedProduts from "../components/FeaturedProduts"
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -14,6 +17,11 @@ const containerVariants = {
 }
 
 const HomePage = () => {
+
+  const {products, fetchFeaturedProducts, loading} = useproductStore();
+  useEffect(() => {
+    fetchFeaturedProducts();
+  }, [fetchFeaturedProducts]);
   const categories = [
     { href: "/jeans", name: "Jeans", imageUrl: "/jeans.jpg" },
     { href: "/t-shirts", name: "T-shirts", imageUrl: "/tshirts.jpg" },
@@ -58,6 +66,8 @@ const HomePage = () => {
             <CategoryItem key={category.name} category={category} />
           ))}
         </motion.div>
+
+        {!loading && products.length > 0 && <FeaturedProduts featuredProducts={products} />}
       </div>
     </motion.div>
   )

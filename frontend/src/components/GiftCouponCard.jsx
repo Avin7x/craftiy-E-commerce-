@@ -21,8 +21,8 @@ const GiftCouponCard = () => {
 
     const handleRemoveCoupon = () => {
         // console.log("remove coupon")
-        removeCoupon();
-        
+         removeCoupon();
+        // setUserInputCode("");
     }
    
   return (

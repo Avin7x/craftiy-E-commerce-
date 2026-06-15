@@ -20,6 +20,7 @@ function App() {
      const {cart, getCartProducts} = useCartStore();
 
     useEffect(()=> {
+         
         checkAuth();
         
     }, [checkAuth]);
@@ -32,6 +33,7 @@ function App() {
     if(checkingAuth) {
         return <LoaderComp/>
     }
+
   return (
     <div className='min-h-screen bg-gray-900 text-white relative overflow-hidden'>
         {/* bg-gradient */}

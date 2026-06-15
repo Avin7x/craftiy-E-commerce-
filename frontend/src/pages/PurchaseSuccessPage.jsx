@@ -13,6 +13,7 @@ const PurchaseSuccessPage = () => {
 	const [ error, setError ] = useState(null);
 
 	useEffect(() => {
+		
 		const handleCheckoutSuccess = async (sessionId) => {
 			try {
 				// save the order in the database
