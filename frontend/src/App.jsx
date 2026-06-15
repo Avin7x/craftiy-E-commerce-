@@ -10,7 +10,7 @@ import LoaderComp from './components/LoaderComp'
 import AdminPage from './pages/AdminPage'
 import CategoryPage from './pages/CategoryPage.jsx'
 import useCartStore from './stores/useCartStore.js'
-import CartPage from './pages/cartPage.jsx'
+import CartPage from './pages/CartPage.jsx'
 import PurchaseSuccessPage from './pages/PurchaseSuccessPage.jsx'
 import PurchaseCancelPage from './pages/PurchaseCancelPage.jsx'
 
